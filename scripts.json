@@ -1,0 +1,431 @@
+{
+  "schema_version": 1,
+  "updated": "2026-11-16",
+  "repo": "wayfarer6/vamp-mcp",
+  "site": "https://wayfarer6.github.io/vamp-script-hub/",
+  "categories": [
+    { "id": "web", "en": "Web & Login", "ko": "웹 · 로그인" },
+    { "id": "data", "en": "Search & Data", "ko": "검색 · 데이터" },
+    { "id": "devops", "en": "DevOps & GitHub", "ko": "DevOps · GitHub" },
+    { "id": "productivity", "en": "Productivity", "ko": "생산성" },
+    { "id": "enterprise", "en": "Enterprise Security", "ko": "엔터프라이즈 보안" }
+  ],
+  "scripts": [
+    {
+      "id": "naver-login-verify",
+      "version": "1.2.0",
+      "author": "wayfarer6",
+      "updated": "2026-11-16",
+      "license": "MIT",
+      "category": "web",
+      "hypervisors": ["virtualbox", "kvm"],
+      "os": ["windows11", "debian"],
+      "resolution": "1920x1080",
+      "tags": ["web", "login", "naver", "ocr", "form-verify", "no-credentials"],
+      "verified": true,
+      "name": {
+        "en": "NAVER Login Form Verifier",
+        "ko": "네이버 로그인 폼 검증"
+      },
+      "summary": {
+        "en": "Opens the NAVER login page, types an ID, and confirms the form reached its ready state without submitting anything.",
+        "ko": "네이버 로그인 페이지를 열고 아이디를 입력한 뒤, 제출 없이 폼이 준비 상태에 도달했는지 확인합니다."
+      },
+      "description": {
+        "en": "A safe first stop for Korean web automation. The script drives the guest browser to nid.naver.com, focuses the ID field by recorded coordinates, types the declared `${username}` input and captures the form region. It intentionally never types a password and never presses the login button, so a screenshot and OCR pass can prove that the page and the input contract work before any credentialed flow is attempted anywhere near a real account.",
+        "ko": "한국 웹 자동화의 안전한 첫 단계입니다. 게스트 브라우저로 nid.naver.com에 접속해 기록된 좌표로 아이디 입력란을 잡고, 선언된 `${username}` 입력값을 타이핑한 뒤 폼 영역을 캡처합니다. 비밀번호는 입력하지 않고 로그인 버튼도 누르지 않도록 의도적으로 설계했으며, 실제 계정이 얽히는 인증 흐름을 시도하기 전에 페이지와 입력 계약이 정상인지 스크린샷과 OCR로 먼저 증명합니다."
+      },
+      "when_to_use": {
+        "en": "Use when a task starts at the NAVER login screen and you need proof that the page, input field and locale rendering are healthy before asking the user for credentials.",
+        "ko": "네이버 로그인 화면에서 작업이 시작되고, 자격 증명을 요청하기 전에 페이지·입력란·언어 렌더링이 정상인지 확인이 필요할 때 사용합니다."
+      },
+      "expected_result": {
+        "en": "The login form is visible, the ID field contains the `username` value, and OCR finds both the 아이디/비밀번호 labels and the 로그인 button.",
+        "ko": "로그인 폼이 보이고 아이디 입력란에 `username` 값이 들어 있으며, OCR이 아이디·비밀번호 레이블과 로그인 버튼을 모두 찾아냅니다."
+      },
+      "verification": {
+        "en": [
+          "URL field shows nid.naver.com after navigation.",
+          "Screenshot `login_form.png` contains the ID and password inputs.",
+          "OCR finds the 아이디, 비밀번호 and 로그인 strings in the captured region.",
+          "No submit occurred: the page is still the login form, not the account home."
+        ],
+        "ko": [
+          "이동 후 주소 표시줄에 nid.naver.com이 보입니다.",
+          "`login_form.png` 스크린샷에 아이디·비밀번호 입력란이 있습니다.",
+          "캡처 영역 OCR에서 아이디, 비밀번호, 로그인 문자열이 모두 검출됩니다.",
+          "제출이 없었음을 확인합니다. 계정 홈이 아니라 로그인 폼 그대로여야 합니다."
+        ]
+      },
+      "inputs": [
+        {
+          "name": "username",
+          "type": "string",
+          "required": true,
+          "example": "demo_user",
+          "desc": {
+            "en": "The ID value typed into the login field. Use a throwaway or sandbox ID, never a real account with a password.",
+            "ko": "로그인 입력란에 타이핑할 아이디 값입니다. 비밀번호가 걸린 실제 계정 대신 임시·샌드박스 아이디를 사용하세요."
+          }
+        }
+      ],
+      "dependencies": ["pyautogui", "Pillow", "pytesseract (OCR, Robot layer)"],
+      "data_handling": {
+        "en": "The script never reads or types a password, and it does not touch the clipboard. The captured PNG stays in the run output folder; delete it if the page shows personal text.",
+        "ko": "비밀번호를 읽거나 입력하지 않고 클립보드도 사용하지 않습니다. 캡처 PNG는 실행 출력 폴더에 남으므로, 페이지에 개인 정보가 보이면 삭제하세요."
+      },
+      "notes": {
+        "en": "Coordinates are recorded for a 1920×1080 guest at 100% browser zoom. Re-record the click point after a layout change or a different DPI setting.",
+        "ko": "좌표는 1920×1080 게스트, 브라우저 확대 100% 기준으로 기록했습니다. 레이아웃이나 DPI가 달라지면 클릭 지점을 다시 기록하세요."
+      },
+      "code": "# VAMP Script Hub · naver-login-verify 1.2.0\n# Opens the NAVER login form, types the declared ID and captures the form.\n# No password is typed and the form is never submitted.\nimport os\nimport time\n\nimport pyautogui\n\npyautogui.FAILSAFE = True\npyautogui.PAUSE = 0.15\nOUT = os.environ.get(\"VAMP_OUTPUT_DIR\", \".\")\n\n# 1. Navigate the guest browser to the login page.\npyautogui.hotkey(\"ctrl\", \"l\")\ntime.sleep(0.6)\npyautogui.write(\"https://nid.naver.com/\", interval=0.03)\npyautogui.press(\"enter\")\ntime.sleep(4.0)\n\n# 2. Focus the ID input (recorded at 1920x1080, browser zoom 100%).\npyautogui.click(960, 434)\ntime.sleep(0.4)\npyautogui.write(\"${username}\", interval=0.06)\ntime.sleep(0.4)\n\n# 3. Leave the password field untouched; only blur the input.\npyautogui.press(\"tab\")\ntime.sleep(0.5)\n\n# 4. Capture the form region for OCR verification in the Robot layer.\nregion = (560, 300, 800, 480)\npyautogui.screenshot(region=region).save(os.path.join(OUT, \"login_form.png\"))\n\n# Robot verification: OCR must find 아이디 / 비밀번호 / 로그인 in login_form.png\n# and the address bar must still show nid.naver.com (no submit happened).\n"
+    },
+    {
+      "id": "google-search-scrape",
+      "version": "1.1.0",
+      "author": "wayfarer6",
+      "updated": "2026-11-16",
+      "license": "MIT",
+      "category": "data",
+      "hypervisors": ["virtualbox", "kvm"],
+      "os": ["windows11", "debian"],
+      "resolution": "1920x1080",
+      "tags": ["search", "google", "ocr", "data-extraction", "research"],
+      "verified": true,
+      "name": {
+        "en": "Google SERP Extractor",
+        "ko": "구글 검색 결과 추출"
+      },
+      "summary": {
+        "en": "Runs a stored query on Google and captures the result page so OCR can lift titles, links and result counts.",
+        "ko": "저장된 검색어로 구글을 조회하고 결과 페이지를 캡처해 OCR이 제목·링크·결과 수를 뽑아낼 수 있게 합니다."
+      },
+      "description": {
+        "en": "Instead of asking a multimodal agent to read the whole browser window on every research turn, this script performs one deterministic search and screenshots only the results column plus the result-count bar. The Robot layer OCRs those two crops, so the agent receives a compact list of candidate titles and URLs to read further. The query is injected through the `${query}` placeholder, which keeps the search itself reusable across tasks.",
+        "ko": "리서치를 할 때마다 멀티모달 에이전트가 브라우저 창 전체를 읽게 하는 대신, 이 스크립트는 검색을 한 번 결정적으로 수행하고 결과 목록과 결과 수 표시줄만 캡처합니다. Robot 계층이 두 영역만 OCR하므로 에이전트는 더 읽어볼 후보 제목과 주소 목록을 간결하게 받습니다. 검색어는 `${query}` 자리표시자로 주입되어 같은 스크립트를 여러 작업에 재사용할 수 있습니다."
+      },
+      "when_to_use": {
+        "en": "Use for repeated lookups where only the first page of results matters, such as collecting candidate documentation links or checking whether a phrase still appears.",
+        "ko": "결과 첫 페이지면 충분한 반복 조회에 적합합니다. 예를 들어 후보 문서 링크를 모으거나 특정 문구가 아직 검색되는지 확인할 때 사용합니다."
+      },
+      "expected_result": {
+        "en": "The SERP shows the query in the search box, at least one organic result block is visible, and `serp_results.png` plus `serp_stats.png` are saved.",
+        "ko": "검색 결과 페이지 검색창에 입력한 검색어가 보이고, 유기적 결과가 한 개 이상 표시되며, `serp_results.png`와 `serp_stats.png`가 저장됩니다."
+      },
+      "verification": {
+        "en": [
+          "OCR of `serp_stats.png` contains a result-count phrase such as `About … results`.",
+          "OCR of `serp_results.png` returns at least three title lines.",
+          "The query string from the input appears in the search box crop.",
+          "No consent or CAPTCHA interstitial is visible; otherwise the run stops as needs_user_verification."
+        ],
+        "ko": [
+          "`serp_stats.png` OCR에 `About … results` 같은 결과 수 문구가 있습니다.",
+          "`serp_results.png` OCR에서 제목 줄이 3개 이상 나옵니다.",
+          "입력한 검색어가 검색창 캡처 영역에 나타납니다.",
+          "동의 화면이나 CAPTCHA가 보이면 실행을 멈추고 needs_user_verification으로 인계합니다."
+        ]
+      },
+      "inputs": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": true,
+          "example": "virtio vs emulated e1000",
+          "desc": {
+            "en": "Search text. Keep it under 200 characters and free of quotes or operators the guest keyboard cannot type reliably.",
+            "ko": "검색어입니다. 200자 이하로 유지하고, 게스트 키보드가 안정적으로 칠 수 없는 따옴표·연산자는 피하세요."
+          }
+        }
+      ],
+      "dependencies": ["pyautogui", "Pillow", "pytesseract (OCR, Robot layer)"],
+      "data_handling": {
+        "en": "Queries leave the guest as a normal browser request to the search provider. The guest browser profile stays local; no cookies or history are uploaded to VAMP.",
+        "ko": "검색어는 일반 브라우저 요청으로 게스트에서 검색 사업자에게 전달됩니다. 게스트 브라우저 프로필은 로컬에 남고, 쿠키나 기록이 VAMP로 업로드되지는 않습니다."
+      },
+      "notes": {
+        "en": "Google changes layout and may show consent screens. The script stops on a detected consent page instead of clicking through it, because consent is the user's decision.",
+        "ko": "구글은 레이아웃을 자주 바꾸고 동의 화면을 띄울 수 있습니다. 동의 여부는 사용자의 결정이므로, 이 스크립트는 동의 화면을 강제로 통과시키지 않고 멈춥니다."
+      },
+      "code": "# VAMP Script Hub · google-search-scrape 1.1.0\n# Runs one Google query and captures the result column for OCR.\nimport os\nimport time\n\nimport pyautogui\n\npyautogui.FAILSAFE = True\npyautogui.PAUSE = 0.12\nOUT = os.environ.get(\"VAMP_OUTPUT_DIR\", \".\")\n\n# 1. New tab, then the search query through the declared placeholder.\npyautogui.hotkey(\"ctrl\", \"t\")\ntime.sleep(0.6)\npyautogui.write(\"https://www.google.com/\", interval=0.03)\npyautogui.press(\"enter\")\ntime.sleep(2.5)\npyautogui.write(\"${query}\", interval=0.04)\npyautogui.press(\"enter\")\ntime.sleep(3.5)\n\n# 2. Capture the result-count bar and the organic result column.\npyautogui.screenshot(region=(560, 190, 840, 40)).save(\n    os.path.join(OUT, \"serp_stats.png\")\n)\npyautogui.screenshot(region=(560, 240, 840, 700)).save(\n    os.path.join(OUT, \"serp_results.png\")\n)\n\n# 3. Scroll once to make a second block visible for the same crops.\npyautogui.scroll(-600)\ntime.sleep(0.8)\npyautogui.screenshot(region=(560, 240, 840, 700)).save(\n    os.path.join(OUT, \"serp_results_p2.png\")\n)\n\n# Robot verification: OCR must find the query, a result count and >=3 titles.\n# A consent or CAPTCHA screen ends the run as needs_user_verification.\n"
+    },
+    {
+      "id": "github-star-repo",
+      "version": "1.0.3",
+      "author": "wayfarer6",
+      "updated": "2026-11-16",
+      "license": "MIT",
+      "category": "devops",
+      "hypervisors": ["virtualbox", "kvm"],
+      "os": ["windows11", "debian"],
+      "resolution": "1920x1080",
+      "tags": ["github", "star", "release", "devops", "asset-check"],
+      "verified": true,
+      "name": {
+        "en": "GitHub Repo Star & Release Check",
+        "ko": "깃허브 레포 스타 및 릴리즈 자산 확인"
+      },
+      "summary": {
+        "en": "Opens a repository, stars it, then captures the latest release page with its downloadable asset names.",
+        "ko": "레포지토리를 열어 스타를 누르고, 최신 릴리즈 페이지에서 다운로드 가능한 자산 이름을 캡처합니다."
+      },
+      "description": {
+        "en": "Useful when a task means triaging many repositories in a signed-in browser. The script resolves `${repo_slug}` to github.com, waits for the header to settle, finds the Star button through a template image rather than a fixed coordinate, and only then clicks. It then opens `/releases/latest` and captures the asset list, so the agent can report version tags and file names without a screenshot of the entire page. The template image keeps the click robust across light and dark themes and translated GitHub UI.",
+        "ko": "로그인된 브라우저에서 여러 레포지토리를 훑어야 하는 작업에 유용합니다. `${repo_slug}`를 github.com 주소로 풀어 접속하고 헤더가 안정될 때까지 기다린 뒤, 고정 좌표가 아니라 템플릿 이미지로 Star 버튼을 찾아 클릭합니다. 이어서 `/releases/latest`를 열어 자산 목록을 캡처하므로, 에이전트는 화면 전체 없이도 버전 태그와 파일 이름을 보고할 수 있습니다. 템플릿 이미지 덕분에 라이트·다크 테마와 번역된 GitHub UI에서도 클릭이 유지됩니다."
+      },
+      "when_to_use": {
+        "en": "Use when the user asks whether a project is tracked, or when release asset names and version tags must be read from the page as a human sees it.",
+        "ko": "특정 프로젝트를 스타해 두었는지 확인하거나, 사람이 보는 화면 그대로 릴리즈 자산 이름과 버전 태그를 읽어야 할 때 사용합니다."
+      },
+      "expected_result": {
+        "en": "The Star button reports `Starred`, and `release_assets.png` shows at least one downloadable asset for the latest tag.",
+        "ko": "Star 버튼이 `Starred` 상태로 표시되고, `release_assets.png`에 최신 태그의 다운로드 자산이 한 개 이상 보입니다."
+      },
+      "verification": {
+        "en": [
+          "Template match score for the Star/Starred button is above the configured threshold.",
+          "OCR of `release_header.png` contains a version tag such as `v0.1.6`.",
+          "`release_assets.png` lists at least one file with a size.",
+          "A 404 page aborts the run instead of clicking anything.",
+          "If the account already starred the repo, the script reports `already_starred` and continues."
+        ],
+        "ko": [
+          "Star/Starred 버튼의 템플릿 매칭 점수가 설정 임계값을 넘습니다.",
+          "`release_header.png` OCR에 `v0.1.6` 같은 버전 태그가 있습니다.",
+          "`release_assets.png`에 크기와 함께 파일이 한 개 이상 나열됩니다.",
+          "404 페이지이면 아무것도 클릭하지 않고 실행을 중단합니다.",
+          "이미 스타한 레포라면 `already_starred`로 보고하고 계속 진행합니다."
+        ]
+      },
+      "inputs": [
+        {
+          "name": "repo_slug",
+          "type": "string",
+          "required": true,
+          "example": "wayfarer6/vamp-mcp",
+          "desc": {
+            "en": "Owner and repository name separated by a slash. No protocol and no trailing slash.",
+            "ko": "슬래시로 구분한 소유자와 레포지토리 이름입니다. 프로토콜과 끝 슬래시는 넣지 않습니다."
+          }
+        }
+      ],
+      "dependencies": ["pyautogui", "Pillow", "opencv-python (template matching)"],
+      "data_handling": {
+        "en": "The star is a write to the user's GitHub account. Run it only for repositories the user named; the script reports the resulting button state so the action stays visible.",
+        "ko": "스타는 사용자 GitHub 계정에 대한 쓰기 동작입니다. 사용자가 지목한 레포지토리에만 실행하고, 스크립트는 결과 버튼 상태를 보고해 동작이 드러나게 합니다."
+      },
+      "notes": {
+        "en": "Ship `star_button.png` and `starred_button.png` in the package `assets/` folder. Recapture them after a major GitHub redesign or at a different scale factor.",
+        "ko": "패키지 `assets/` 폴더에 `star_button.png`와 `starred_button.png`를 함께 넣어 배포하세요. GitHub가 대규모로 개편되거나 배율이 달라지면 다시 캡처해야 합니다."
+      },
+      "code": "# VAMP Script Hub · github-star-repo 1.0.3\n# Stars a repository, then captures the latest release assets.\nimport os\nimport time\n\nimport pyautogui\n\npyautogui.FAILSAFE = True\npyautogui.PAUSE = 0.15\nOUT = os.environ.get(\"VAMP_OUTPUT_DIR\", \".\")\nASSETS = os.path.join(os.path.dirname(__file__), \"assets\")\n\n# 1. Open the repository.\npyautogui.hotkey(\"ctrl\", \"l\")\ntime.sleep(0.5)\npyautogui.write(\"https://github.com/${repo_slug}\", interval=0.03)\npyautogui.press(\"enter\")\ntime.sleep(4.0)\n\n# 2. Click Star only when the button template is actually on screen.\nbutton = pyautogui.locateCenterOnScreen(\n    os.path.join(ASSETS, \"star_button.png\"), confidence=0.87\n)\nif button:\n    pyautogui.click(button)\n    time.sleep(1.2)\n    starred = pyautogui.locateOnScreen(\n        os.path.join(ASSETS, \"starred_button.png\"), confidence=0.87\n    )\n    # Robot verification: starred must be found, otherwise status=unverified.\n\n# 3. Capture the latest release header and its asset list.\npyautogui.hotkey(\"ctrl\", \"l\")\npyautogui.write(\"https://github.com/${repo_slug}/releases/latest\", interval=0.03)\npyautogui.press(\"enter\")\ntime.sleep(4.0)\npyautogui.screenshot(region=(560, 200, 840, 120)).save(\n    os.path.join(OUT, \"release_header.png\")\n)\npyautogui.screenshot(region=(560, 320, 840, 520)).save(\n    os.path.join(OUT, \"release_assets.png\")\n)\n\n# Robot verification: OCR finds a version tag and at least one asset row.\n"
+    },
+    {
+      "id": "slack-desktop-status",
+      "version": "1.0.2",
+      "author": "wayfarer6",
+      "updated": "2026-11-16",
+      "license": "MIT",
+      "category": "productivity",
+      "hypervisors": ["virtualbox", "kvm"],
+      "os": ["windows11", "debian"],
+      "resolution": "1920x1080",
+      "tags": ["slack", "status", "productivity", "hotkey", "messaging"],
+      "verified": true,
+      "name": {
+        "en": "Slack Desktop Status Setter",
+        "ko": "슬랙 데스크톱 상태 설정"
+      },
+      "summary": {
+        "en": "Sets the Slack desktop status text through the global shortcut and confirms it in the profile panel.",
+        "ko": "전역 단축키로 슬랙 데스크톱 상태 문구를 설정하고 프로필 패널에서 확인합니다."
+      },
+      "description": {
+        "en": "A short, high-frequency workflow: set a focus or meeting status without hunting through menus. The script activates Slack, opens the status dialog with the desktop shortcut, types `${status_text}` and saves. It then reopens the profile panel and screenshots it, because a status that was typed is not a status that was applied. The run stops when the window title does not look like Slack, so a misdirected keystroke cannot land in another application.",
+        "ko": "자주 반복되는 짧은 작업입니다. 메뉴를 뒤지지 않고 집중·회의 상태를 설정합니다. 슬랙을 활성화하고 데스크톱 단축키로 상태 창을 열어 `${status_text}`를 입력한 뒤 저장합니다. 이어서 프로필 패널을 다시 열어 캡처합니다. 문구를 입력했다는 사실과 상태가 실제로 적용되었다는 사실은 다르기 때문입니다. 창 제목이 슬랙으로 보이지 않으면 실행을 멈추므로, 엉뚱한 키 입력이 다른 앱에 들어가지 않습니다."
+      },
+      "when_to_use": {
+        "en": "Use when the user wants their Slack presence updated around a meeting or focus block, and the desktop app is already signed in on the guest.",
+        "ko": "회의나 집중 시간에 맞춰 슬랙 상태를 바꾸고 싶고, 게스트에서 데스크톱 앱에 이미 로그인되어 있을 때 사용합니다."
+      },
+      "expected_result": {
+        "en": "The profile panel shows the `status_text` value and the status emoji, and `slack_status.png` captures that panel.",
+        "ko": "프로필 패널에 `status_text` 값과 상태 이모지가 보이고, `slack_status.png`에 그 패널이 캡처됩니다."
+      },
+      "verification": {
+        "en": [
+          "The foreground window title contains `Slack` before any keystroke.",
+          "OCR of `slack_status.png` contains the exact status text.",
+          "The status dialog closed after save; no unsaved input remains.",
+          "If Slack is not running, the run ends as needs_setup rather than opening another app."
+        ],
+        "ko": [
+          "키 입력 전에 활성 창 제목에 `Slack`이 들어 있습니다.",
+          "`slack_status.png` OCR에 설정한 상태 문구가 정확히 포함됩니다.",
+          "저장 후 상태 창이 닫혀 미저장 입력이 남지 않습니다.",
+          "슬랙이 실행 중이 아니면 다른 앱을 여는 대신 needs_setup으로 종료합니다."
+        ]
+      },
+      "inputs": [
+        {
+          "name": "status_text",
+          "type": "string",
+          "required": true,
+          "example": "In a VAMP demo until 15:00",
+          "desc": {
+            "en": "Status message, up to 100 characters. Avoid anything private; teammates can see it.",
+            "ko": "상태 메시지이며 최대 100자입니다. 동료가 볼 수 있으니 사적인 내용은 넣지 마세요."
+          }
+        }
+      ],
+      "dependencies": ["pyautogui", "pygetwindow"],
+      "data_handling": {
+        "en": "Only the status text the user dictates is typed. No channel, DM or credential content is read, captured or sent.",
+        "ko": "사용자가 지정한 상태 문구만 입력합니다. 채널·DM·자격 증명 내용을 읽거나 캡처하거나 전송하지 않습니다."
+      },
+      "notes": {
+        "en": "The status dialog shortcut is Ctrl+Shift+Y on Windows and Linux. A Slack workspace policy can disable shortcuts; in that case the run reports needs_user_setup instead of clicking by guess.",
+        "ko": "상태 창 단축키는 Windows와 Linux에서 Ctrl+Shift+Y입니다. 워크스페이스 정책이 단축키를 막을 수 있으며, 그때는 추측으로 클릭하지 않고 needs_user_setup을 보고합니다."
+      },
+      "code": "# VAMP Script Hub · slack-desktop-status 1.0.2\n# Sets the Slack desktop status through the keyboard shortcut.\nimport os\nimport time\n\nimport pyautogui\nimport pygetwindow as gw\n\npyautogui.FAILSAFE = True\npyautogui.PAUSE = 0.15\nOUT = os.environ.get(\"VAMP_OUTPUT_DIR\", \".\")\n\n# 1. Focus Slack only when a Slack window really exists.\nwindows = [w for w in gw.getAllTitles() if \"Slack\" in w]\nif not windows:\n    raise RuntimeError(\"needs_setup: Slack desktop is not running\")\nslack = gw.getWindowsWithTitle(windows[0])[0]\nif slack.isMinimized:\n    slack.restore()\nslack.activate()\ntime.sleep(1.2)\n\n# 2. Open the status dialog and type the declared text.\npyautogui.hotkey(\"ctrl\", \"shift\", \"y\")\ntime.sleep(1.0)\npyautogui.write(\"${status_text}\", interval=0.04)\ntime.sleep(0.5)\npyautogui.press(\"enter\")\ntime.sleep(1.5)\n\n# 3. Reopen the profile panel and capture the applied status.\npyautogui.click(1820, 40)\ntime.sleep(1.0)\npyautogui.screenshot(region=(1500, 40, 420, 260)).save(\n    os.path.join(OUT, \"slack_status.png\")\n)\n\n# Robot verification: OCR of slack_status.png must contain the status text.\n"
+    },
+    {
+      "id": "notion-pdf-export",
+      "version": "1.0.1",
+      "author": "wayfarer6",
+      "updated": "2026-11-16",
+      "license": "MIT",
+      "category": "productivity",
+      "hypervisors": ["virtualbox", "kvm"],
+      "os": ["windows11"],
+      "resolution": "1920x1080",
+      "tags": ["notion", "pdf", "export", "hotkey", "documents"],
+      "verified": true,
+      "name": {
+        "en": "Notion Page to PDF",
+        "ko": "노션 PDF 내보내기"
+      },
+      "summary": {
+        "en": "Finds a Notion page by title with quick find and exports it as PDF using the desktop export shortcut.",
+        "ko": "빠른 찾기로 제목에 맞는 노션 페이지를 열고, 데스크톱 내보내기 단축키로 PDF로 저장합니다."
+      },
+      "description": {
+        "en": "Exports one Notion page to PDF without walking the file tree. The script opens quick find, types `${page_title}`, confirms the first exact match, and triggers the export dialog. It selects PDF and saves into the guest Downloads folder. Verification happens outside the page: the Python layer checks that a PDF exists with a non-zero size and a modification time after the run started, because a dismissed save dialog looks exactly like a successful export on screen.",
+        "ko": "파일 트리를 따라가지 않고 노션 페이지 하나를 PDF로 내보냅니다. 빠른 찾기를 열어 `${page_title}`를 입력하고 첫 정확 일치 항목을 확정한 뒤 내보내기 창을 엽니다. PDF를 선택해 게스트 다운로드 폴더에 저장합니다. 검증은 화면 밖에서 이뤄집니다. 저장 창을 닫은 경우와 성공한 경우가 화면상 똑같기 때문에, Python 계층이 실행 시작 이후 생성된 0바이트 아닌 PDF 파일 존재 여부를 확인합니다."
+      },
+      "when_to_use": {
+        "en": "Use when a report or archive step needs a PDF of a known Notion page and the desktop app is signed in on the guest.",
+        "ko": "보고서·보관 단계에서 특정 노션 페이지의 PDF가 필요하고, 게스트의 데스크톱 앱에 로그인되어 있을 때 사용합니다."
+      },
+      "expected_result": {
+        "en": "A PDF named after the page exists in the guest Downloads folder, its size is above 10 KB, and `export_dialog.png` shows the PDF option selected.",
+        "ko": "페이지 이름을 딴 PDF가 게스트 다운로드 폴더에 있고 크기가 10KB를 넘으며, `export_dialog.png`에 PDF 옵션이 선택되어 있습니다."
+      },
+      "verification": {
+        "en": [
+          "Quick-find result title equals the requested `page_title`.",
+          "A new `*.pdf` file appears in Downloads after the run start time.",
+          "File size is greater than 10 KB and the PDF header `%PDF` is present.",
+          "If no exact page title matched, the run stops before the export dialog."
+        ],
+        "ko": [
+          "빠른 찾기 결과 제목이 요청한 `page_title`과 같습니다.",
+          "실행 시작 시각 이후 다운로드 폴더에 새 `*.pdf` 파일이 생깁니다.",
+          "파일 크기가 10KB를 넘고 PDF 헤더 `%PDF`가 있습니다.",
+          "정확히 일치하는 페이지 제목이 없으면 내보내기 창을 열기 전에 중단합니다."
+        ]
+      },
+      "inputs": [
+        {
+          "name": "page_title",
+          "type": "string",
+          "required": true,
+          "example": "Q4 Launch Retro",
+          "desc": {
+            "en": "Exact page title as it appears in quick find. Partial titles can select the wrong page.",
+            "ko": "빠른 찾기에 표시되는 정확한 페이지 제목입니다. 일부만 입력하면 다른 페이지가 선택될 수 있습니다."
+          }
+        }
+      ],
+      "dependencies": ["pyautogui", "Pillow"],
+      "data_handling": {
+        "en": "The PDF is written to the guest Downloads folder only. The script does not upload it anywhere; copying it out of the guest is a separate, user-approved step.",
+        "ko": "PDF는 게스트 다운로드 폴더에만 저장됩니다. 스크립트가 외부로 업로드하지 않으며, 게스트 밖으로 꺼내는 일은 사용자가 승인하는 별도 단계입니다."
+      },
+      "notes": {
+        "en": "Linux Notion desktop uses the same Ctrl+Shift+E export dialog, but the save dialog differs by desktop environment. This entry is verified on Windows 11 only.",
+        "ko": "Linux 노션 데스크톱도 Ctrl+Shift+E 내보내기 창을 쓰지만 저장 창은 데스크톱 환경마다 다릅니다. 이 항목은 Windows 11에서만 검증했습니다."
+      },
+      "code": "# VAMP Script Hub · notion-pdf-export 1.0.1\n# Exports one Notion page to PDF through quick find and the export dialog.\nimport glob\nimport os\nimport time\n\nimport pyautogui\n\npyautogui.FAILSAFE = True\npyautogui.PAUSE = 0.15\nOUT = os.environ.get(\"VAMP_OUTPUT_DIR\", \".\")\nDOWNLOADS = os.path.expanduser(\"~/Downloads\")\nPROFILE = os.path.expanduser(\"~/AppData/Roaming/Notion\")\n\n# 1. Quick find the page and open the first exact match.\npyautogui.hotkey(\"ctrl\", \"p\")\ntime.sleep(0.8)\npyautogui.write(\"${page_title}\", interval=0.04)\ntime.sleep(1.2)\npyautogui.press(\"enter\")\ntime.sleep(2.0)\n\n# 2. Open the export dialog and choose PDF.\npyautogui.hotkey(\"ctrl\", \"shift\", \"e\")\ntime.sleep(1.2)\npyautogui.screenshot(region=(560, 240, 800, 600)).save(\n    os.path.join(OUT, \"export_dialog.png\")\n)\npyautogui.press(\"down\")\npyautogui.press(\"enter\")\ntime.sleep(2.5)\n\n# 3. Save into the guest Downloads folder.\npyautogui.write(\"${page_title}\", interval=0.03)\npyautogui.press(\"enter\")\ntime.sleep(4.0)\n\n# 4. Screen-independent verification: a fresh PDF must exist.\nrecent = [\n    path\n    for path in glob.glob(os.path.join(DOWNLOADS, \"*.pdf\"))\n    if os.path.getsize(path) > 10_000 and os.path.getmtime(path) > time.time() - 120\n]\nif not recent:\n    raise RuntimeError(\"export_unverified: no new PDF found in Downloads\")\n\n# Robot verification: export_dialog.png shows PDF selected; the newest PDF opens.\n"
+    },
+    {
+      "id": "cert-dialog-select",
+      "version": "1.0.4",
+      "author": "wayfarer6",
+      "updated": "2026-11-16",
+      "license": "MIT",
+      "category": "enterprise",
+      "hypervisors": ["virtualbox"],
+      "os": ["windows11"],
+      "resolution": "1920x1080",
+      "tags": ["certificate", "keystore", "enterprise", "dialog", "human-in-the-loop"],
+      "verified": true,
+      "name": {
+        "en": "Enterprise Certificate Dialog Helper",
+        "ko": "엔터프라이즈 인증서 선택 헬퍼"
+      },
+      "summary": {
+        "en": "Navigates a native certificate picker to the requested certificate name and hands PIN entry back to the user.",
+        "ko": "네이티브 인증서 선택 창에서 요청한 인증서 이름까지 이동하고, PIN 입력은 사용자에게 돌려줍니다."
+      },
+      "description": {
+        "en": "Enterprise portals and VPN clients open a native certificate picker that is invisible to web-page automation. This helper waits for that dialog, selects the row matching `${cert_name}` by keyboard, confirms it, and screenshots the result. It deliberately stops before any PIN or password field: those keystrokes stay with the user, and the run reports `needs_user_verification` so the agent knows it must hand back rather than type a secret. A private key passphrase is never a script input.",
+        "ko": "엔터프라이즈 포털과 VPN 클라이언트는 웹 페이지 자동화로는 닿지 않는 네이티브 인증서 선택 창을 엽니다. 이 헬퍼는 그 창을 기다렸다가 키보드로 `${cert_name}`에 해당하는 행을 선택하고 확정한 뒤 결과를 캡처합니다. PIN이나 비밀번호 입력란 앞에서는 의도적으로 멈춥니다. 그 키 입력은 사용자의 몫이며, 실행은 `needs_user_verification`을 보고해 에이전트가 비밀을 대신 입력하지 않고 인계해야 함을 알립니다. 개인 키 암호는 스크립트 입력값이 될 수 없습니다."
+      },
+      "when_to_use": {
+        "en": "Use when a native certificate picker blocks a signed-in enterprise portal and the user has already told you which certificate to choose.",
+        "ko": "로그인된 엔터프라이즈 포털이 네이티브 인증서 선택 창에 막혀 있고, 사용자가 어떤 인증서를 고를지 이미 알려 주었을 때 사용합니다."
+      },
+      "expected_result": {
+        "en": "The picker closes with the requested certificate selected, the portal proceeds to its PIN prompt, and `cert_selected.png` captures the state before any PIN was typed.",
+        "ko": "요청한 인증서가 선택된 채 선택 창이 닫히고 포털이 PIN 입력 단계로 넘어가며, PIN 입력 전 상태가 `cert_selected.png`에 캡처됩니다."
+      },
+      "verification": {
+        "en": [
+          "A window titled with the OS certificate-picker name is in the foreground.",
+          "The selected row label OCRs to the requested `cert_name`.",
+          "Execution stops at the PIN field and reports needs_user_verification.",
+          "No PIN, password or private-key passphrase appears in the log or inputs."
+        ],
+        "ko": [
+          "OS 인증서 선택 창 이름의 창이 활성 상태입니다.",
+          "선택된 행 레이블 OCR이 요청한 `cert_name`과 일치합니다.",
+          "PIN 입력란에서 실행을 멈추고 needs_user_verification을 보고합니다.",
+          "PIN·비밀번호·개인 키 암호가 로그나 입력값에 남지 않습니다."
+        ]
+      },
+      "inputs": [
+        {
+          "name": "cert_name",
+          "type": "string",
+          "required": true,
+          "example": "CORP-User-Auth",
+          "desc": {
+            "en": "Display name of the certificate row to select. Do not include a PIN, token code or passphrase.",
+            "ko": "선택할 인증서 행의 표시 이름입니다. PIN, 토큰 코드, 암호는 포함하지 마세요."
+          }
+        }
+      ],
+      "dependencies": ["pyautogui", "pygetwindow"],
+      "data_handling": {
+        "en": "Only the certificate display name is typed. Secrets remain with the user; the guest vault or OS keystore handles them, and VAMP never receives them.",
+        "ko": "인증서 표시 이름만 입력합니다. 비밀 정보는 사용자에게 남고, 게스트 볼트나 OS 키스토어가 처리하며 VAMP는 이를 전달받지 않습니다."
+      },
+      "notes": {
+        "en": "Native dialog titles differ by Windows language and build. Adjust `DIALOG_TITLES` for the guest locale. KVM is untested for this dialog; the entry is marked VirtualBox only.",
+        "ko": "네이티브 창 제목은 Windows 언어와 빌드에 따라 다릅니다. 게스트 로케일에 맞게 `DIALOG_TITLES`를 조정하세요. 이 창은 KVM에서 검증하지 않아 VirtualBox 전용으로 표시했습니다."
+      },
+      "code": "# VAMP Script Hub · cert-dialog-select 1.0.4\n# Selects a certificate row in a native picker, then hands PIN entry to the user.\nimport os\nimport time\n\nimport pyautogui\nimport pygetwindow as gw\n\npyautogui.FAILSAFE = True\npyautogui.PAUSE = 0.2\nOUT = os.environ.get(\"VAMP_OUTPUT_DIR\", \".\")\nDIALOG_TITLES = (\"인증서 선택\", \"Select a certificate\", \"Windows Security\")\n\n# 1. Wait for the native picker instead of clicking the page behind it.\ndialog = None\nfor _ in range(20):\n    for title in gw.getAllTitles():\n        if any(name in title for name in DIALOG_TITLES):\n            dialog = gw.getWindowsWithTitle(title)[0]\n            break\n    if dialog:\n        break\n    time.sleep(0.5)\nif not dialog:\n    raise RuntimeError(\"needs_user_verification: certificate picker not found\")\n\ndialog.activate()\ntime.sleep(0.8)\n\n# 2. Select the matching row by typing its prefix, then confirm.\npyautogui.write(\"${cert_name}\", interval=0.05)\ntime.sleep(0.6)\npyautogui.press(\"down\")\npyautogui.press(\"up\")\npyautogui.screenshot(region=(560, 260, 800, 420)).save(\n    os.path.join(OUT, \"cert_selected.png\")\n)\npyautogui.press(\"enter\")\ntime.sleep(1.5)\n\n# 3. Stop at the PIN prompt. Never type a PIN or passphrase here.\nprint(\"needs_user_verification: certificate chosen; PIN entry is the user's step\")\n\n# Robot verification: the dialog is gone, cert_selected.png shows the right row,\n# and the run records needs_user_verification rather than a login success.\n"
+    }
+  ]
+}

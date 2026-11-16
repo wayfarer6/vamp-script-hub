@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: VAMP core repository
+    url: https://github.com/wayfarer6/vamp-mcp
+    about: Installation, VM backends and the RPA Library live here.
+  - name: VAMP user guide
+    url: https://github.com/wayfarer6/vamp-mcp/blob/main/docs/USER_GUIDE.md
+    about: Every button and workflow in the VS Code extension.

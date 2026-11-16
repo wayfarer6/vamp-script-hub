@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="VAMP bat mascot">
+  <defs>
+    <linearGradient id="wingGrad" x1="20" y1="70" x2="220" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="0.55" stop-color="#6D5DF6"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="bodyGrad" x1="100" y1="90" x2="140" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A78BFA"/>
+      <stop offset="1" stop-color="#6D28D9"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#8B5CF6" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="eyeGlow" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <circle cx="120" cy="126" r="104" fill="url(#halo)"/>
+
+  <g filter="url(#soft)">
+    <!-- left wing -->
+    <path d="M116 112 C102 92 74 78 44 82 C54 92 54 100 48 110 C62 108 68 116 70 126 C80 116 90 114 98 120 C100 110 108 104 116 108 Z"
+          fill="url(#wingGrad)" opacity="0.95"/>
+    <!-- right wing -->
+    <path d="M124 112 C138 92 166 78 196 82 C186 92 186 100 192 110 C178 108 172 116 170 126 C160 116 150 114 142 120 C140 110 132 104 124 108 Z"
+          fill="url(#wingGrad)" opacity="0.95"/>
+    <!-- lower wing scallops -->
+    <path d="M104 130 C86 126 72 132 64 146 C74 146 78 152 80 162 C88 150 96 146 106 148 Z"
+          fill="url(#wingGrad)" opacity="0.6"/>
+    <path d="M136 130 C154 126 168 132 176 146 C166 146 162 152 160 162 C152 150 144 146 134 148 Z"
+          fill="url(#wingGrad)" opacity="0.6"/>
+  </g>
+
+  <!-- ears -->
+  <path d="M106 100 L102 76 L120 92 Z" fill="url(#bodyGrad)"/>
+  <path d="M134 100 L138 76 L120 92 Z" fill="url(#bodyGrad)"/>
+  <path d="M107 98 L105 84 L116 93 Z" fill="#06B6D4" opacity="0.35"/>
+  <path d="M133 98 L135 84 L124 93 Z" fill="#06B6D4" opacity="0.35"/>
+
+  <!-- body -->
+  <path d="M120 92 C136 92 146 108 146 130 C146 154 134 172 120 172 C106 172 94 154 94 130 C94 108 104 92 120 92 Z"
+        fill="url(#bodyGrad)"/>
+
+  <!-- chest accent -->
+  <path d="M120 146 C126 152 132 156 138 158" stroke="#10B981" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.55"/>
+
+  <!-- eyes -->
+  <g filter="url(#eyeGlow)">
+    <ellipse cx="111" cy="124" rx="4.6" ry="6" fill="#7DFBE0"/>
+    <ellipse cx="129" cy="124" rx="4.6" ry="6" fill="#7DFBE0"/>
+  </g>
+  <ellipse cx="111" cy="122" rx="1.6" ry="2" fill="#0B0B11"/>
+  <ellipse cx="129" cy="122" rx="1.6" ry="2" fill="#0B0B11"/>
+
+  <!-- fangs -->
+  <path d="M115 140 L117 148 L119 140 Z" fill="#ECECF6" opacity="0.85"/>
+  <path d="M121 140 L123 148 L125 140 Z" fill="#ECECF6" opacity="0.85"/>
+</svg>

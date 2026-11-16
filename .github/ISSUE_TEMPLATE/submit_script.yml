@@ -1,0 +1,121 @@
+name: Submit an RPA script
+description: Propose a new community script for the VAMP Script Hub.
+title: "[Script] "
+labels: ["script-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing a workflow. Keep it to **one task**, remove every password, PIN, token and personal string, and describe a result that a reviewer can observe.
+
+        Prefer a pull request? Add `scripts/<your-id>/` with `source.py`, `rpa.json` and `README.md`. See [CONTRIBUTING.md](https://github.com/wayfarer6/vamp-script-hub/blob/main/CONTRIBUTING.md).
+
+  - type: input
+    id: script_id
+    attributes:
+      label: Script ID
+      description: Lowercase letters, digits and dashes. This becomes the catalog slug.
+      placeholder: naver-login-verify
+    validations:
+      required: true
+
+  - type: input
+    id: script_name
+    attributes:
+      label: Title
+      description: What the script does, in one line.
+      placeholder: NAVER Login Form Verifier
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What it does, what it never touches, and which screen state it expects (10–4000 characters).
+      placeholder: Opens the login page, types the declared ID and captures the form. It never types a password and never submits.
+    validations:
+      required: true
+
+  - type: textarea
+    id: when_to_use
+    attributes:
+      label: When should an agent use it?
+      placeholder: When the task starts at the NAVER login screen and the form must be confirmed before credentials are requested.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_result
+    attributes:
+      label: Expected result
+      description: Something a screenshot, OCR pass or file check can prove.
+      placeholder: OCR finds the ID field, the password field and the login button; the page is still the login form.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      options:
+        - VirtualBox
+        - KVM
+    validations:
+      required: true
+
+  - type: input
+    id: resolution
+    attributes:
+      label: Recorded guest resolution
+      description: Width x height of the guest screen while recording.
+      placeholder: 1920x1080
+    validations:
+      required: true
+
+  - type: input
+    id: inputs
+    attributes:
+      label: Input names
+      description: Comma separated. Each one must appear as ${name} in the source.
+      placeholder: username
+
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: Comma separated search tags.
+      placeholder: web, login, naver, ocr
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification checklist
+      description: One check per line. These become the review criteria.
+      placeholder: |
+        URL bar shows nid.naver.com
+        OCR finds 아이디, 비밀번호, 로그인
+        No submit occurred
+    validations:
+      required: true
+
+  - type: textarea
+    id: source_code
+    attributes:
+      label: source.py
+      description: The recorded PyAutoGUI source. Paste it here if you are not opening a pull request.
+      render: python
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Submission checks
+      options:
+        - label: The source contains no credentials, tokens, PINs or personal text.
+          required: true
+        - label: I reviewed the recording and am willing to publish it under the MIT license.
+          required: true
+        - label: Every declared input appears as a ${name} placeholder in the source.
+          required: true
