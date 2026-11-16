@@ -49,6 +49,14 @@
     return obj[state.lang] || obj.en || "";
   }
 
+  function mdInline(value) {
+    return esc(value).replace(/`([^`]+)`/g, "<code>$1</code>");
+  }
+
+  function resolutionLabel(value) {
+    return String(value || "").replace(/\s*[x×]\s*/i, "×");
+  }
+
   function readLang() {
     try {
       const stored = localStorage.getItem(STORE_KEY);
@@ -313,7 +321,7 @@
     const badges = []
       .concat((script.hypervisors || []).map((id) => hyperLabel(id)))
       .concat((script.os || []).map((id) => osLabel(id)))
-      .concat(script.resolution ? [script.resolution.replace("x", "×")] : [])
+      .concat(script.resolution ? [resolutionLabel(script.resolution)] : [])
       .map((label) => '<span class="badge">' + esc(label) + "</span>")
       .join("");
     const inputCount = (script.inputs || []).length;
@@ -384,13 +392,13 @@
         '<td class="input-type">' + esc(input.type || "string") + "</td>" +
         '<td class="' + (input.required ? "req-yes" : "req-no") + '">' + esc(input.required ? t("detail.required") : t("detail.optional")) + "</td>" +
         "<td><code>" + esc(input.example || "—") + "</code></td>" +
-        '<td class="input-desc">' + esc(pick(input.desc)) + "</td>" +
+        '<td class="input-desc">' + mdInline(pick(input.desc)) + "</td>" +
       "</tr>"
     )).join("");
 
     const verification = (pick(script.verification) || []);
     const verifyList = verification.map((item) =>
-      '<li><svg class="icon"><use href="#i-check"/></svg><span>' + esc(item) + "</span></li>"
+      '<li><svg class="icon"><use href="#i-check"/></svg><span>' + mdInline(item) + "</span></li>"
     ).join("");
 
     const deps = (script.dependencies || []);
@@ -419,14 +427,14 @@
       '<div class="detail-meta">' +
         (script.verified ? '<span class="verified-badge"><svg class="icon"><use href="#i-check"/></svg>' + esc(t("detail.verifiedTag")) + "</span>" : "") +
         metaBadges(script) +
-        '<span class="badge">' + esc(script.resolution || "1920×1080") + "</span>" +
+        '<span class="badge">' + esc(resolutionLabel(script.resolution || "1920x1080")) + "</span>" +
         '<span class="badge">v' + esc(script.version || "1.0.0") + "</span>" +
       "</div>" +
-      '<p class="detail-summary">' + esc(pick(script.summary)) + "</p>" +
+      '<p class="detail-summary">' + mdInline(pick(script.summary)) + "</p>" +
       '<div class="panel-grid">' +
-        '<div class="panel"><h4>' + esc(t("detail.when")) + "</h4><p>" + esc(pick(script.when_to_use)) + "</p></div>" +
-        '<div class="panel"><h4>' + esc(t("detail.expected")) + "</h4><p>" + esc(pick(script.expected_result)) + "</p></div>" +
-        '<div class="panel wide"><h4>' + esc(t("detail.overview")) + "</h4><p>" + esc(pick(script.description)) + "</p></div>" +
+        '<div class="panel"><h4>' + esc(t("detail.when")) + "</h4><p>" + mdInline(pick(script.when_to_use)) + "</p></div>" +
+        '<div class="panel"><h4>' + esc(t("detail.expected")) + "</h4><p>" + mdInline(pick(script.expected_result)) + "</p></div>" +
+        '<div class="panel wide"><h4>' + esc(t("detail.overview")) + "</h4><p>" + mdInline(pick(script.description)) + "</p></div>" +
       "</div>" +
 
       '<div class="block">' +
@@ -465,9 +473,9 @@
       "</div>" +
 
       '<div class="panel-grid">' +
-        '<div class="panel"><h4>' + esc(t("detail.data")) + "</h4><p>" + esc(pick(script.data_handling)) + "</p></div>" +
+        '<div class="panel"><h4>' + esc(t("detail.data")) + "</h4><p>" + mdInline(pick(script.data_handling)) + "</p></div>" +
         '<div class="panel"><h4>' + esc(t("detail.deps")) + "</h4><p>" + depsHtml + "</p></div>" +
-        '<div class="panel wide"><h4>' + esc(t("detail.notes")) + "</h4><p>" + esc(pick(script.notes)) + "</p></div>" +
+        '<div class="panel wide"><h4>' + esc(t("detail.notes")) + "</h4><p>" + mdInline(pick(script.notes)) + "</p></div>" +
       "</div>" +
 
       '<div class="detail-foot">' +
@@ -850,11 +858,12 @@
       params.set("description", manifest.description);
       params.set("when_to_use", manifest.when_to_use);
       params.set("expected_result", manifest.expected_result);
-      params.set("backend", manifest.backend);
+      params.set("backend", manifest.backend === "kvm" ? "KVM" : "VirtualBox");
       params.set("resolution", manifest.resolution.join("x"));
       params.set("inputs", manifest.inputs.join(", "));
       params.set("tags", manifest.tags.join(", "));
-      params.set("verification", (manifest.__verify || []).join("\n"));
+      const verify = (manifest.__verify && manifest.__verify.length) ? manifest.__verify : [manifest.expected_result];
+      params.set("verification", verify.join("\n"));
       if (withCode) params.set("source_code", manifest.__code);
       return "https://github.com/" + REPO + "/issues/new?" + params.toString();
     };

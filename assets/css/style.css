@@ -356,7 +356,7 @@ code, pre, kbd { font-family: var(--mono); }
 .chip-v { color: var(--mint); }
 .chip-a { top: 8%; left: -2%; animation: hover 8s ease-in-out infinite; }
 .chip-b { bottom: 13%; right: -3%; animation: hover 9s ease-in-out infinite 0.6s; }
-.chip-c { bottom: 34%; left: 2%; color: var(--text-dim); animation: hover 7.5s ease-in-out infinite 1.2s; }
+.chip-c { bottom: 4%; left: 2%; color: var(--text-dim); animation: hover 7.5s ease-in-out infinite 1.2s; }
 
 /* ---------- stats ---------- */
 .stats {
@@ -932,6 +932,18 @@ ol.code-list .ln { flex: 1 1 auto; }
   font-size: 0.7rem;
 }
 .steps code, .callout code, .panel code, .submit-guide code { font-size: 0.86em; color: var(--cyan); background: rgba(6, 182, 212, 0.08); padding: 1px 5px; border-radius: 5px; }
+.detail-summary code,
+.check-list code,
+table.inputs td code,
+.panel code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  color: var(--cyan);
+  background: rgba(6, 182, 212, 0.09);
+  padding: 1px 5px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
 .steps kbd {
   padding: 1px 5px;
   border: 1px solid var(--line-strong);
