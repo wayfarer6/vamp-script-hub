@@ -35,9 +35,10 @@ assets/css/style.css           theme, layout, components
 assets/js/i18n.js              EN/KO strings
 assets/js/app.js               render, filter, modal, generator
 assets/img/                    bat mascot and favicon
-.github/workflows/deploy.yml   GitHub Pages deployment
 .github/ISSUE_TEMPLATE/        script submission form
 ```
+
+GitHub Pages serves this repository from `main` (root) and rebuilds on every push. `.nojekyll` keeps the files byte-for-byte, so `scripts.json` is fetched as JSON.
 
 Add or edit a script by changing `scripts.json`; the page renders whatever the file contains. Keep both languages filled in: `name`, `summary`, `description`, `when_to_use`, `expected_result`, `verification` and `inputs[].desc` are objects with `en` and `ko`.
 
