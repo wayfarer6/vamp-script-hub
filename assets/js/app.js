@@ -561,7 +561,7 @@
   function generatorHtml() {
     const gen = state.generation;
     const draft = gen ? gen.manifest : null;
-    const form = gen ? gen.form : null;
+    const form = gen ? gen.form : (state.formDraft || null);
     const preview = gen ? gen.previewTab || "manifest" : null;
 
     const resolutionOptions = ["1920x1080", "1600x900", "2560x1440", "1366x768"].map((value) => ({ value: value, label: value.replace("x", " × ") }));
@@ -842,7 +842,10 @@
         { level: "warn", text: t("gen.msg.draft") }
       ]
     };
+    state.formDraft = form;
     renderSubmit("gen");
+    const preview = document.querySelector("[data-preview-block]");
+    if (preview && preview.scrollIntoView) preview.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
   function issueUrl() {
@@ -890,6 +893,7 @@
   function openModal(kind, payload) {
     lastFocus = document.activeElement;
     state.modal = { kind: kind, id: payload && payload.id, tab: (payload && payload.tab) || "guide" };
+    if (kind === "submit") state.formDraft = null;
     layer.hidden = false;
     document.body.classList.add("modal-open");
 
@@ -940,6 +944,15 @@
   function setLang(lang, animate) {
     if (lang !== "en" && lang !== "ko") return;
     const apply = () => {
+      if (state.modal) {
+        const panel = document.querySelector('[data-panel="gen"]');
+        if (panel) {
+          const live = readForm();
+          const touched = live.id || live.name || live.description || live.when ||
+            live.expected || live.tags.length || live.inputs.length || live.code !== DEFAULT_CODE;
+          if (touched) state.formDraft = live;
+        }
+      }
       state.lang = lang;
       writeLang(lang);
       renderAll();
@@ -1098,18 +1111,28 @@
       if (event.target.closest("#gen-issue")) { openIssue(); return; }
       if (event.target.closest("#gen-reset")) {
         state.generation = null;
+        state.formDraft = null;
         renderSubmit("gen");
         return;
       }
     });
 
-    // live placeholder feedback while typing the code field
+    // live placeholder feedback while typing inputs or the code field
     $("#modal-body").addEventListener("input", (event) => {
-      if (event.target && event.target.id === "gen-code") {
-        const form = readForm();
-        form.inputs.forEach((name) => {
-          if (form.code.indexOf("${" + name + "}") === -1) setError("gen-inputs", t("gen.msg.placeholder", { input: name }));
-        });
+      const target = event.target;
+      if (!target || (target.id !== "gen-code" && target.id !== "gen-inputs")) return;
+      const form = readForm();
+      let missing = null;
+      form.inputs.forEach((name) => {
+        if (!missing && form.code.indexOf("${" + name + "}") === -1) missing = name;
+      });
+      const field = document.querySelector('[data-field="gen-inputs"]');
+      const err = $("#err-gen-inputs");
+      if (missing) {
+        setError("gen-inputs", t("gen.msg.placeholder", { input: missing }));
+      } else if (err) {
+        err.textContent = "";
+        if (field) field.classList.remove("invalid");
       }
     });
   }
